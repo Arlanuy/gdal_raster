@@ -6,4 +6,6 @@ def main():
     if version_num < 1100000:
         sys.exit('ERROR: Python bindings of GDAL 1.10 or later required')
 
+    
+
 main()

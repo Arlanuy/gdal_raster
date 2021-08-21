@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import os, glob
 from osgeo import gdal
 
@@ -38,30 +38,32 @@ def raster2array(geotif_file):
         metadata['scaleFactor'] = raster.GetScale()
 
         array = dataset.GetRasterBand(1).ReadAsArray(0,0,metadata['array_cols'],metadata['array_rows']).astype(np.float)
-        #array[np.where(array==metadata['noDataValue'])]=np.nan
-        array = array/metadata['scaleFactor']
+        try:
+            array = array/metadata['scaleFactor']
+        except TypeError as t:
+            print("scalefactor is ", metadata['scaleFactor'])
 
     elif metadata['bands'] > 1:    
         for i in range(1, dataset.RasterCount+1):
             band = dataset.GetRasterBand(i).ReadAsArray(0,0,metadata['array_cols'],metadata['array_rows']).astype(np.float)
-            #band[np.where(band==metadata['noDataValue'])]=np.nan
+            
             band = band/metadata['scaleFactor']
             array[...,i-1] = band
 
     return array, metadata
 
 def main():
-    files_to_mosaic = glob.glob('C:\\Users\\Allan\\Documents\\python_gdal\\TEAK_Aspect_Tiles\\TEAK_Aspect_Tiles\\*_aspect.tif')
+    files_to_mosaic = glob.glob('gdal_raster_files\\*_aspect.tif')
     print(files_to_mosaic);
     files_string = " ".join(files_to_mosaic)
     print(files_string)
-    command = "gdal_merge.py -o C:\\Users\\Allan\\Documents\\python_gdal\\TEAK_Aspect_Tiles\\TEAK_Aspect_Tiles\\TEAK_Aspect_Mosaic.tif -of gtiff " + files_string
+    command = "gdal_merge.py -o gdal_raster_files\\TEAK_Aspect_Mosaic.tif -of gtiff " + files_string
     print(os.popen(command).read())
 
-    TEAK_aspect_array, TEAK_aspect_metadata = raster2array('C:\\Users\\Allan\\Documents\\python_gdal\\TEAK_Aspect_Tiles\\TEAK_Aspect_Tiles\\TEAK_Aspect_Mosaic.tif')
+    TEAK_aspect_array, TEAK_aspect_metadata = raster2array('gdal_raster_files\\TEAK_Aspect_Mosaic.tif')
 
-    #print metadata in alphabetical order
-"""    for item in sorted(TEAK_aspect_metadata):
+    print("metadata is ", TEAK_aspect_metadata)
+    for item in sorted(TEAK_aspect_metadata):
         print(item + ':', TEAK_aspect_metadata[item])
     plot_array(TEAK_aspect_array,
            TEAK_aspect_metadata['extent'],
@@ -77,8 +79,7 @@ def plot_array(array,spatial_extent,colorlimit,ax=plt.gca(),title='',cmap_title=
     plt.title(title); ax = plt.gca(); 
     ax.ticklabel_format(useOffset=False, style='plain'); 
     rotatexlabels = plt.setp(ax.get_xticklabels(),rotation=90); 
-
     
-"""
+
 
 main()
